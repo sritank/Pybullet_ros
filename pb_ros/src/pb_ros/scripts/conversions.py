@@ -11,6 +11,7 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Float64MultiArray
+from pybullet_class import BtCamera
 
 
 # path = "/home/amrut/Documents/sublime/src/ur5pybullet/urdf/real_arm.urdf"
@@ -21,6 +22,8 @@ class RosConvert(object):
 		self.count = 0
 		self.robot = ur_robot(path,gui) # Passes robot path to pybullet class.
 		self.jointstate = JointState()
+		# self.arm_id = 0
+		# self.camera = BtCamera(320, 240, 0.96, 0.01, 1.0, 0, 11)
 		self.armcmd = Float64MultiArray() # ROS msg type to contain joint values
 		                                  # for applying on joint controllers. 
 		

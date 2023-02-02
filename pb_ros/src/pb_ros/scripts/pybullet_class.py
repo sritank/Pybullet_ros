@@ -4,7 +4,11 @@ import numpy as np
 import pybullet as p
 import pybullet_data
 import time
+import ipdb
 
+from spatial import Rotation, Transform
+import open3d as o3d
+from perception import CameraIntrinsic
 # p.connect(p.GUI)
 # pid = p.isConnected()
 # print(pid)
@@ -23,6 +27,7 @@ class ur_robot:
 		self.start_bullet(gui=gui) # If true enables Graphical interface.
 		# Loads the robot and a plane at desired position and orientation
 		self.robot = p.loadURDF(path,basePosition=basePosition,baseOrientation=baseOrientation,useFixedBase=1)
+		self.arm_id = 0
 		self._plane = p.loadURDF("plane.urdf",basePosition=[0,0,-2],baseOrientation=[0,0,0,1],useFixedBase=1)
 		self._numjoints = p.getNumJoints(self.robot)
 		self._linkNames = []
@@ -35,6 +40,9 @@ class ur_robot:
 		self._joints_pos = []
 		self._joints_vel = []
 		self._joints_eff = []
+		# self.camera = BtCamera(p, 320, 240, 0.96, 0.01, 1.0, 0, 5)
+		# print("instantiated camera with and bullet object view matrix is")
+		# print(self.camera.proj_mat)
 		self.setGravity()
 
 	def getJointNames(self):
@@ -167,3 +175,58 @@ class ur_robot:
 # 	ur5.getLinkStates()
 # 	pass
 
+class BtCamera:
+    def __init__(
+        self, #bullet_obj, 
+        width,
+        height,
+        vfov,
+        near,
+        far,
+        body_uid=None,
+        link_id=None,
+        renderer=p.ER_BULLET_HARDWARE_OPENGL,
+    ):
+        f, cx, cy = height / (2.0 * np.tan(vfov / 2.0)), width / 2.0, height / 2.0
+        self.intrinsic = CameraIntrinsic(width, height, f, f, cx, cy)
+        self.near = near
+        self.far = far
+        fov, aspect = np.rad2deg(vfov), width / height
+        self.proj_mat = p.computeProjectionMatrixFOV(fov, aspect, near, far)
+        # self.bullet_obj = bullet_obj
+        # self.proj_mat = self.bullet_obj.computeProjectionMatrixFOV(fov, aspect, near, far)
+        self.body_uid = body_uid
+        self.link_id = link_id
+        self.renderer = renderer
+
+    def get_image(self, pose=None):
+        # ipdb.set_trace()
+        # print(self.bullet_obj.getLinkState(self.body_uid, self.link_id, computeForwardKinematics=1))
+        # print(p.getLinkState(self.body_uid, self.link_id, computeForwardKinematics=1))
+        if pose is None:
+            r = p.getLinkState(self.body_uid, self.link_id, computeForwardKinematics=1)
+            # print(r)
+            # r = self.bullet_obj.getLinkState(self.body_uid, self.link_id, computeForwardKinematics=1)			
+            # pose = Transform(Rotation.from_quat(r[5]), r[4])
+            pose = Transform(Rotation.from_quat(r[3]), r[4])
+        R, t = pose.rotation, pose.translation
+        view_mat = p.computeViewMatrix(t, R.apply([0, 0, 1]) + t, R.apply([0, -1, 0]))
+        # view_mat = self.bullet_obj.computeViewMatrix(t, R.apply([0, 0, 1]) + t, R.apply([0, -1, 0]))
+        result = p.getCameraImage(
+            self.intrinsic.width,
+            self.intrinsic.height,
+            view_mat,
+            self.proj_mat,
+            renderer=self.renderer,
+        )		
+        # result = self.bullet_obj.getCameraImage(
+        #     self.intrinsic.width,
+        #     self.intrinsic.height,
+        #     view_mat,
+        #     self.proj_mat,
+        #     renderer=self.renderer,
+        # )
+        color = result[2][:, :, :3]
+        depth = self.far * self.near / (self.far - (self.far - self.near) * result[3])
+        mask = result[4]
+        return color, depth, mask
