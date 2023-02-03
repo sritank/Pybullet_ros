@@ -27,7 +27,7 @@ class ROS_Wrapper:
 		self.joint_state = joint_state(rosconvert_object=self.bullet_obj)
 		self.ArmCommand = ArmCommand(rosconvert_object=self.bullet_obj)
 		self.actionserver = actionserver(rosconvert_object=self.bullet_obj)
-		self.plugin = CameraPlugin(BtCamera(320, 240, 0.96, 0.01, 1.0, self.bullet_obj.robot.arm_id, 6))
+		self.plugin = CameraPlugin(BtCamera(320, 240, 0.96, 0.01, 1.0, self.bullet_obj.robot.arm_id, 7))
 		# self.plugin = CameraPlugin(self.bullet_obj.robot.camera)
 		self.plugin.thread.start()
 		
@@ -76,16 +76,18 @@ class CameraPlugin(Plugin):
         topic = self.name + "/depth/camera_info"
         self.info_pub = rospy.Publisher(topic, CameraInfo, queue_size=10)
         topic = self.name + "/depth/image_rect_raw"
+        
         self.depth_pub = rospy.Publisher(topic, Image, queue_size=10)
 
     def update(self):
         stamp = rospy.Time.now()
         msg = to_camera_info_msg(self.camera.intrinsic)
         # msg = self.camera.intrinsic
-        msg.header.frame_id = self.name + "_optical_frame"
+        # ipdb.set_trace()
+        msg.header.frame_id = self.name + "_depth_optical_frame"
         msg.header.stamp = stamp
         self.info_pub.publish(msg)
-
+        
         # ipdb.set_trace()
         _, depth, _ = self.camera.get_image()
 
@@ -94,6 +96,7 @@ class CameraPlugin(Plugin):
 
         msg = self.cv_bridge.cv2_to_imgmsg((1000 * depth).astype(np.uint16))
         msg.header.stamp = stamp
+        msg.header.frame_id = self.name + "_depth_optical_frame"
         self.depth_pub.publish(msg)
 
 def apply_noise(img, k=1000, theta=0.001, sigma=0.005, l=4.0):

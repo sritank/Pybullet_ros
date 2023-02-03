@@ -5,8 +5,8 @@ import sensor_msgs.msg
 from shape_msgs.msg import Mesh, MeshTriangle
 import std_msgs.msg
 
-from robot_helpers.perception import CameraIntrinsic
-from robot_helpers.spatial import Rotation, Transform
+from perception import CameraIntrinsic
+from spatial import Rotation, Transform
 
 
 def from_camera_info_msg(msg):

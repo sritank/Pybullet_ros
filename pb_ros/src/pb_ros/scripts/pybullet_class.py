@@ -148,6 +148,7 @@ class ur_robot:
 			p.connect(p.DIRECT)
 			pass
 		p.setAdditionalSearchPath(pybullet_data.getDataPath())
+		# p.resetDebugVisualizerCamera(1.2, 30, -30, [0.4, 0.0, 0.2])
 
 	def step(self):
 		p.stepSimulation()
@@ -177,7 +178,7 @@ class ur_robot:
 
 class BtCamera:
     def __init__(
-        self, #bullet_obj, 
+        self, 
         width,
         height,
         vfov,
@@ -193,8 +194,6 @@ class BtCamera:
         self.far = far
         fov, aspect = np.rad2deg(vfov), width / height
         self.proj_mat = p.computeProjectionMatrixFOV(fov, aspect, near, far)
-        # self.bullet_obj = bullet_obj
-        # self.proj_mat = self.bullet_obj.computeProjectionMatrixFOV(fov, aspect, near, far)
         self.body_uid = body_uid
         self.link_id = link_id
         self.renderer = renderer
@@ -204,14 +203,15 @@ class BtCamera:
         # print(self.bullet_obj.getLinkState(self.body_uid, self.link_id, computeForwardKinematics=1))
         # print(p.getLinkState(self.body_uid, self.link_id, computeForwardKinematics=1))
         if pose is None:
+            # ipdb.set_trace()
             r = p.getLinkState(self.body_uid, self.link_id, computeForwardKinematics=1)
-            # print(r)
-            # r = self.bullet_obj.getLinkState(self.body_uid, self.link_id, computeForwardKinematics=1)			
-            # pose = Transform(Rotation.from_quat(r[5]), r[4])
-            pose = Transform(Rotation.from_quat(r[3]), r[4])
+            pose = Transform(Rotation.from_quat(r[5]), r[4])
         R, t = pose.rotation, pose.translation
-        view_mat = p.computeViewMatrix(t, R.apply([0, 0, 1]) + t, R.apply([0, -1, 0]))
-        # view_mat = self.bullet_obj.computeViewMatrix(t, R.apply([0, 0, 1]) + t, R.apply([0, -1, 0]))
+        # view_mat = p.computeViewMatrix(t, R.apply([0, 0, 1]) + t, R.apply([0, -1, 0]))
+        view_mat = p.computeViewMatrix(t, R.apply([1, 0, 0]), R.apply([0, 0, 1]))
+        # view_mat = p.computeViewMatrix(cameraEyePosition=[0, 0, 1],
+        #                                   cameraTargetPosition=[0, 0, 0],
+        #                                   cameraUpVector=[1, 0, 0])
         result = p.getCameraImage(
             self.intrinsic.width,
             self.intrinsic.height,
@@ -219,13 +219,7 @@ class BtCamera:
             self.proj_mat,
             renderer=self.renderer,
         )		
-        # result = self.bullet_obj.getCameraImage(
-        #     self.intrinsic.width,
-        #     self.intrinsic.height,
-        #     view_mat,
-        #     self.proj_mat,
-        #     renderer=self.renderer,
-        # )
+
         color = result[2][:, :, :3]
         depth = self.far * self.near / (self.far - (self.far - self.near) * result[3])
         mask = result[4]
