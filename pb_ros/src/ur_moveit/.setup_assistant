@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: pb_ros
+    relative_path: urdf/urdf/real_arm.urdf
+    xacro_args: "--inorder "
+  SRDF:
+    relative_path: config/sisbot.srdf
+  CONFIG:
+    author_name: Amrut Panda
+    author_email: amruta@iitk.ac.in
+    generated_timestamp: 1608303017

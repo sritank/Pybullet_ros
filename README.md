@@ -1,4 +1,2 @@
 # Pybullet_ros
-Pybullet with Ros and Moveit. 
-UR5 manipulator has been used in this implementation.
-**Please navigate to the master branch.**
+Simulation of UR5 manipulator using Pybullet integrated with Ros and Moveit. 
