@@ -208,7 +208,7 @@ class BtCamera:
             pose = Transform(Rotation.from_quat(r[5]), r[4])
         R, t = pose.rotation, pose.translation
         # view_mat = p.computeViewMatrix(t, R.apply([0, 0, 1]) + t, R.apply([0, -1, 0]))
-        view_mat = p.computeViewMatrix(t, R.apply([1, 0, 0]), R.apply([0, 0, 1]))
+        view_mat = p.computeViewMatrix(t, R.apply([1, 0, 0]), R.apply([0, 0, -1]))
         # view_mat = p.computeViewMatrix(cameraEyePosition=[0, 0, 1],
         #                                   cameraTargetPosition=[0, 0, 0],
         #                                   cameraUpVector=[1, 0, 0])
